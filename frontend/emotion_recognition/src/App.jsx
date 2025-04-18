@@ -127,8 +127,8 @@ function App() {
         {result && (
           <div style={{ marginTop: '2rem' }}>
             <h3>Prediction Result</h3>
-            <p><strong>Speech Model Prediction:</strong> {result.emotion_label}</p>
-            <p><strong>Text Model Prediction:</strong> {result.emotion_label}</p>
+            <p><strong>Speech Model Prediction:</strong> {result.speech_prediction}</p>
+            <p><strong>Text Model Prediction:</strong> {result.text_prediction}</p>
             <p><strong>Emotion:</strong> {result.emotion_label}</p>
 
             <h4>Confidence Scores</h4>
