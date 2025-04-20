@@ -21,13 +21,13 @@ app = Flask(__name__)
 CORS(app)  # allow cross-origin requests from frontend
 
 # Load Models
-cnn_model = load_model("./backend/models/cnn_six_seconds_ver2.keras")  # Load trained CNN model
+cnn_model = load_model("./backend/models/cnn_ver2.keras")  # Load trained CNN model
 nb_model = joblib.load("./backend/models/best_model.pkl")# Load trained Naïve Bayes model
 vectorizer = joblib.load("./backend/models/tfidf_vectorizer.pkl")
 
 # Define Weights
-cnn_weight = 0.49
-nb_weight = 0.86 
+cnn_weight = 0.47
+nb_weight = 0.86
 
 # Normalize weights so they sum to 1
 total_weight = cnn_weight + nb_weight
