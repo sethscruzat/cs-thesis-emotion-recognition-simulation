@@ -11,6 +11,7 @@ import psutil
 import tracemalloc
 import time
 import assemblyai as aai
+import noisereduce as nr
 from dotenv import load_dotenv
 from tensorflow.keras.models import load_model
 
@@ -48,17 +49,29 @@ def reduce_noise(y, sr):
     return reduced_y
 
 def preprocess_audio(audio_file, target_size=(128, 256)):
-    y, sr = librosa.load(audio_file, sr=22050)
-    mel_spec = librosa.feature.melspectrogram(y=y, sr=sr, n_mels=128)
+    audio = AudioSegment.from_file(audio_file)
+    samples = np.array(audio.get_array_of_samples()).astype(np.float32)
+    samples = librosa.util.normalize(samples)  # Normalize
+    
+    y = librosa.resample(samples, orig_sr=audio.frame_rate, target_sr=22050)
+    y = reduce_noise(y, 22050)
+
+    segment_duration = len(y) / 22050
+    n_fft = min(int(segment_duration * 22050 * 0.025), 2048)
+    hop_length = max(1, int(n_fft / 2))
+
+    stft = librosa.stft(y, n_fft=n_fft, hop_length=hop_length, window='hann')
+
+    mel_spec = librosa.feature.melspectrogram(S=np.abs(stft)**2, sr=22050, n_mels=128)
     mel_spec_db = librosa.power_to_db(mel_spec, ref=np.max)
 
-    mel_spec_normalized = cv2.normalize(mel_spec_db, None, 0, 255, cv2.NORM_MINMAX) # Normalize spectrogram values to 0-255
-    mel_spec_resized = cv2.resize(mel_spec_normalized, target_size, interpolation=cv2.INTER_AREA) # Resize to match CNN input
-
+    mel_spec_resized = cv2.resize(mel_spec, target_size, interpolation=cv2.INTER_AREA)
+    
     spectogram = np.array(mel_spec_resized).reshape(-1, 128, 256, 1)
-    spectogram = spectogram / 255.0
+    spectogram = spectogram / 63.75
 
     return np.expand_dims(spectogram, axis=1) # expanding for time dimension
+    # return spectogram
 
 # ============================================================== SPEECH MODEL =======================================================
 def predict_audio(audio_input):
